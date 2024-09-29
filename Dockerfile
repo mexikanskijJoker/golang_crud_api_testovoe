@@ -16,5 +16,3 @@ WORKDIR /root/
 COPY --from=builder /main .
 
 EXPOSE 8080
-
-CMD ["./main"]
