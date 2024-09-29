@@ -20,8 +20,8 @@ func New(store store.SongsStore) *Server {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/songs/index", s.handleGetSongs).Methods("GET")
-	r.HandleFunc("/api/v1/songs/create", s.handleCreateSong).Methods("POST")
+	r.HandleFunc("/api/v1/info", s.handleGetSongs).Methods("GET")
+	r.HandleFunc("/api/v1/create", s.handleCreateSong).Methods("POST")
 
 	s.Server = &http.Server{
 		Handler: r,
@@ -62,15 +62,16 @@ func (s *Server) handleGetSongs(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateSong(w http.ResponseWriter, r *http.Request) {
 	var song store.Song
+
 	if err := json.NewDecoder(r.Body).Decode(&song); err != nil {
 		http.Error(w, "exec handleCreateSong invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	if err := store.SongsStore.CreateSong(&store.Store{}, song.Group, song.Song); err != nil {
+	if err := s.store.CreateSong(song.Group, song.Song); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }

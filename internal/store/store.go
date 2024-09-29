@@ -23,8 +23,11 @@ type Store struct {
 }
 
 type Song struct {
-	Group string `json:"group"`
-	Song  string `json:"song"`
+	Group       string `json:"group"`
+	Song        string `json:"song"`
+	ReleaseDate string `json:"release_date"`
+	Link        string `json:"link"`
+	Text        string `json:"text"`
 }
 
 func New(pool *pgxpool.Pool) *Store {
@@ -38,6 +41,9 @@ var (
 	songCols  = []any{
 		"group",
 		"song",
+		"releasedate",
+		"link",
+		"text",
 	}
 	//go:embed 1_init.sql
 	migrationFS []byte
@@ -95,7 +101,13 @@ func (s *Store) GetSongs(ctx context.Context, group, song string, page, pageSize
 	var songs []Song
 	for rows.Next() {
 		var song Song
-		if err := rows.Scan(&song.Group, &song.Song); err != nil {
+		if err := rows.Scan(
+			&song.Group,
+			&song.Song,
+			&song.ReleaseDate,
+			&song.Link,
+			&song.Text,
+		); err != nil {
 			return nil, fmt.Errorf("scan get_songs: %w", err)
 		}
 		songs = append(songs, song)
