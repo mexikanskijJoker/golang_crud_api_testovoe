@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/mexikanskijjoker/songs_library/internal/logger"
 	"github.com/mexikanskijjoker/songs_library/internal/server"
 	"github.com/mexikanskijjoker/songs_library/internal/store"
-	"github.com/mexikanskijjoker/songs_library/logger"
 )
 
 const (
@@ -43,7 +43,7 @@ func run(ctx context.Context) error {
 	defer pool.Close()
 
 	storage := store.New(pool)
-	if err := storage.ApplyMigrations(ctx); err != nil {
+	if err := storage.ApplyMigrations(); err != nil {
 		return fmt.Errorf("apply migrations: %w", err)
 	}
 

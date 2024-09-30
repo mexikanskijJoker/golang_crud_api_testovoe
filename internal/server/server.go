@@ -63,7 +63,7 @@ func (s *Server) handleGetSongs(w http.ResponseWriter, r *http.Request) {
 		pageSize = 10
 	}
 
-	songs, err := s.store.GetSongs(r.Context(), group, song, page, pageSize)
+	songs, err := s.store.GetSongs(group, song, page, pageSize)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
