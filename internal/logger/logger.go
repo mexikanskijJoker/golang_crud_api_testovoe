@@ -14,7 +14,6 @@ func New() *logrus.Logger {
 
 	logger := logrus.New()
 	logger.SetLevel(logrus.InfoLevel)
-	logger.SetLevel(logrus.ErrorLevel)
 	logger.SetOutput(file)
 	logger.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
