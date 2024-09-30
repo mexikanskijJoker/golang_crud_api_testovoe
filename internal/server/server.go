@@ -2,21 +2,25 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/mexikanskijjoker/songs_library/internal/store"
+	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
 	*http.Server
-	store store.SongsStore
+	store  store.SongsStore
+	logger *logrus.Logger
 }
 
-func New(store store.SongsStore) *Server {
+func New(store store.SongsStore, logger *logrus.Logger) *Server {
 	s := &Server{
-		store: store,
+		store:  store,
+		logger: logger,
 	}
 
 	r := mux.NewRouter()
@@ -38,6 +42,16 @@ func (s *Server) handleGetSongs(w http.ResponseWriter, r *http.Request) {
 	song := r.URL.Query().Get("song")
 	pageStr := r.URL.Query().Get("page")
 	pageSizeStr := r.URL.Query().Get("pageSize")
+
+	s.logger.Infof(
+		"Received GET Request, IP: %s, URL: %s, params: %v",
+		r.RemoteAddr,
+		r.RequestURI,
+		fmt.Sprintf(
+			"{ group: %s, song: %s, pageStr: %s, pageSizeStr: %s }",
+			group, song, pageStr, pageSizeStr,
+		),
+	)
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
@@ -70,6 +84,13 @@ func (s *Server) handleCreateSong(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.logger.Infof(
+		"Received POST Request, IP: %s, URL: %s, params: %s",
+		r.RemoteAddr,
+		r.RequestURI,
+		fmt.Sprintf("{ group: %s, song: %s }", song.Group, song.Song),
+	)
+
 	if err := s.store.CreateSong(song.Group, song.Song); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,6 +109,18 @@ func (s *Server) handleUpdateSong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	s.logger.Infof(
+		"Received PUT Request, IP: %s, URL: %s, params: %s",
+		r.RemoteAddr,
+		r.RequestURI,
+		fmt.Sprintf("{ song_id: %d, releasedate: %s, link: %s, text: %s }",
+			request.SongID,
+			request.Song.ReleaseDate,
+			request.Song.Link,
+			request.Song.Text,
+		),
+	)
 
 	if err := s.store.UpdateSong(
 		request.SongID,
@@ -111,6 +144,15 @@ func (s *Server) handleDestroySong(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	s.logger.Infof(
+		"Received DELETE Request, IP: %s, URL: %s, params: %s",
+		r.RemoteAddr,
+		r.RequestURI,
+		fmt.Sprintf("{ song_id: %d }",
+			request.SongID,
+		),
+	)
 
 	if err := s.store.DeleteSong(request.SongID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

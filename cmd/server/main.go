@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mexikanskijjoker/songs_library/internal/server"
 	"github.com/mexikanskijjoker/songs_library/internal/store"
+	"github.com/mexikanskijjoker/songs_library/logger"
 )
 
 const (
@@ -46,7 +47,8 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("apply migrations: %w", err)
 	}
 
-	s := server.New(storage)
+	logger := logger.New()
+	s := server.New(storage, logger)
 
 	go func() {
 		<-ctx.Done()

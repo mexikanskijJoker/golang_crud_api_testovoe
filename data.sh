@@ -62,7 +62,7 @@
 # curl -X PUT ${url} \
 #     -H "${headers}" \
 #     -d '{
-#         "song_id": 48,
+#         "song_id": 28,
 #         "song_detail": {
 #             "release_date": "11.09.2001",
 #             "link": "https://www.around_the_world.com",
@@ -75,4 +75,4 @@
 # headers="Content-Type: application/json"
 # curl -X DELETE ${url} \
 #     -H "${headers}" \
-#     -d '{ "song_id": 48 }'
+#     -d '{ "song_id": 47 }'
