@@ -14,8 +14,8 @@ type SongsStore interface {
 	ApplyMigrations(ctx context.Context) error
 	CreateSong(group, song string) error
 	GetSongs(ctx context.Context, group, song string, page, pageSize int) ([]Song, error)
-	DeleteSong(ctx context.Context, songID int) error
-	UpdateSong(ctx context.Context, songID int, group, song string) error
+	DeleteSong(songID uint64) error
+	UpdateSong(songID uint64, releasedate, link, text string) error
 }
 
 type Store struct {
@@ -116,24 +116,25 @@ func (s *Store) GetSongs(ctx context.Context, group, song string, page, pageSize
 	return songs, nil
 }
 
-func (s *Store) DeleteSong(ctx context.Context, songID int) error {
+func (s *Store) DeleteSong(songID uint64) error {
 	sql, args, err := songTable.Where(goqu.Ex{"id": songID}).Delete().ToSQL()
 	if err != nil {
 		return fmt.Errorf("delete_song: %w", err)
 	}
 
-	if _, err = s.db.Exec(ctx, sql, args...); err != nil {
+	if _, err = s.db.Exec(context.Background(), sql, args...); err != nil {
 		return fmt.Errorf("exec delete_song: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Store) UpdateSong(ctx context.Context, songID int, group, song string) error {
+func (s *Store) UpdateSong(songID uint64, releasedate, link, text string) error {
 	sql, args, err := goqu.Update("songs").
 		Set(goqu.Record{
-			"group": group,
-			"song":  song,
+			"releasedate": releasedate,
+			"link":        link,
+			"text":        text,
 		}).
 		Where(goqu.Ex{"id": songID}).
 		Returning(songCols...).
@@ -142,7 +143,7 @@ func (s *Store) UpdateSong(ctx context.Context, songID int, group, song string) 
 		return fmt.Errorf("update_song: %w", err)
 	}
 
-	if _, err = s.db.Exec(ctx, sql, args...); err != nil {
+	if _, err = s.db.Exec(context.Background(), sql, args...); err != nil {
 		return fmt.Errorf("exec update_song: %w", err)
 	}
 

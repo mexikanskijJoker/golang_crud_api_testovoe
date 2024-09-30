@@ -22,6 +22,8 @@ func New(store store.SongsStore) *Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/info", s.handleGetSongs).Methods("GET")
 	r.HandleFunc("/api/v1/create", s.handleCreateSong).Methods("POST")
+	r.HandleFunc("/api/v1/update", s.handleUpdateSong).Methods("PUT")
+	r.HandleFunc("/api/v1/delete", s.handleDestroySong).Methods("DELETE")
 
 	s.Server = &http.Server{
 		Handler: r,
@@ -69,6 +71,48 @@ func (s *Server) handleCreateSong(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.store.CreateSong(song.Group, song.Song); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) handleUpdateSong(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		SongID uint64     `json:"song_id"`
+		Song   store.Song `json:"song_detail"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.store.UpdateSong(
+		request.SongID,
+		request.Song.ReleaseDate,
+		request.Song.Link,
+		request.Song.Text,
+	); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) handleDestroySong(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		SongID uint64 `json:"song_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.store.DeleteSong(request.SongID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
