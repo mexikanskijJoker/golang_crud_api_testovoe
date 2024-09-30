@@ -11,9 +11,9 @@ import (
 )
 
 type SongsStore interface {
-	ApplyMigrations(ctx context.Context) error
+	ApplyMigrations() error
 	CreateSong(group, song string) error
-	GetSongs(ctx context.Context, group, song string, page, pageSize int) ([]Song, error)
+	GetSongs(group, song string, page, pageSize int) ([]Song, error)
 	DeleteSong(songID uint64) error
 	UpdateSong(songID uint64, releasedate, link, text string) error
 }
@@ -51,8 +51,8 @@ var (
 
 var _ SongsStore = (*Store)(nil)
 
-func (s *Store) ApplyMigrations(ctx context.Context) error {
-	if _, err := s.db.Exec(ctx, string(migrationFS)); err != nil {
+func (s *Store) ApplyMigrations() error {
+	if _, err := s.db.Exec(context.Background(), string(migrationFS)); err != nil {
 		return err
 	}
 	return nil
@@ -77,7 +77,7 @@ func (s *Store) CreateSong(group, song string) error {
 	return nil
 }
 
-func (s *Store) GetSongs(ctx context.Context, group, song string, page, pageSize int) ([]Song, error) {
+func (s *Store) GetSongs(group, song string, page, pageSize int) ([]Song, error) {
 	ds := songTable.Select(songCols...)
 	if group != "" {
 		ds = ds.Where(goqu.Ex{"group": group})
@@ -92,7 +92,7 @@ func (s *Store) GetSongs(ctx context.Context, group, song string, page, pageSize
 		return nil, fmt.Errorf("get_songs: %w", err)
 	}
 
-	rows, err := s.db.Query(ctx, sql, args...)
+	rows, err := s.db.Query(context.Background(), sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("exec get_songs: %w", err)
 	}
